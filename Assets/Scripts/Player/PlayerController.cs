@@ -1,11 +1,18 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
-    public float moveSpeed = 5f;
+    public float moveSpeed = 5f;                 // 기본 이동속도(버프는 이 값에 가산)
+    public float runMultiplier = 1.6f;           // 달리기 배수
+    public float staminaUsePerSecond = 20f;       // 초당 스태미너 소모
+    private bool isRunning;
+
+    private Coroutine speedBoostCor;
+    private Coroutine jumpBoostCor;
     private Vector2 curMovementInput;
     public float jumpPower = 80f;
     public LayerMask groundLayerMask;
@@ -19,13 +26,14 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 mouseDelta;
 
-    [HideInInspector]
-    public bool canLook = true;
+    [HideInInspector] public bool canLook = true;
     private Rigidbody rb;
+    private PlayerCondition condition;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        condition = GetComponent<PlayerCondition>();
     }
 
     void Start()
@@ -53,11 +61,11 @@ public class PlayerController : MonoBehaviour
 
     public void OnMoveInput(InputAction.CallbackContext context)
     {
-        if(context.phase == InputActionPhase.Performed)
+        if (context.phase == InputActionPhase.Performed)
         {
             curMovementInput = context.ReadValue<Vector2>();
         }
-        else if(context.phase == InputActionPhase.Canceled)
+        else if (context.phase == InputActionPhase.Canceled)
         {
             curMovementInput = Vector2.zero;
         }
@@ -65,20 +73,36 @@ public class PlayerController : MonoBehaviour
 
     public void OnJumpInput(InputAction.CallbackContext context)
     {
-        if(context.phase == InputActionPhase.Started && IsGrounded())
+        if (context.phase == InputActionPhase.Started && IsGrounded())
         {
             rb.AddForce(Vector2.up * jumpPower, ForceMode.Impulse);
         }
     }
-
+    public void OnRunInput(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Started)   isRunning = true;
+        if (context.phase == InputActionPhase.Canceled)  isRunning = false;
+    }
+    // Move() 변경
     private void Move()
     {
         Vector3 dir = transform.forward * curMovementInput.y + transform.right * curMovementInput.x;
-        dir *= moveSpeed;
-        dir.y = rb.velocity.y;
 
+        float targetSpeed = moveSpeed;
+        if (isRunning && condition != null)
+        {
+            bool consumed = condition.UseStamina(staminaUsePerSecond * Time.fixedDeltaTime);
+            if (consumed)
+                targetSpeed = moveSpeed * runMultiplier;
+            else
+                isRunning = false;
+        }
+
+        dir *= targetSpeed;
+        dir.y = rb.velocity.y;
         rb.velocity = dir;
     }
+
 
     void CameraLook()
     {
@@ -99,7 +123,7 @@ public class PlayerController : MonoBehaviour
             new Ray(transform.position + (-transform.right * 0.2f) +(transform.up * 0.01f), Vector3.down)
         };
 
-        for(int i = 0; i < rays.Length; i++)
+        for (int i = 0; i < rays.Length; i++)
         {
             if (Physics.Raycast(rays[i], 0.1f, groundLayerMask))
             {
@@ -108,11 +132,33 @@ public class PlayerController : MonoBehaviour
         }
         return false;
     }
-    
-    void ToggleCursor()
+
+    public void ApplySpeedBoost(float addAmount, float duration)
     {
-        bool toggle = Cursor.lockState == CursorLockMode.Locked;
-        Cursor.lockState = toggle ? CursorLockMode.None : CursorLockMode.Locked;
-        canLook = !toggle;
+        if (speedBoostCor != null) StopCoroutine(speedBoostCor);
+        speedBoostCor = StartCoroutine(SpeedBoostRoutine(addAmount, duration));
+    }
+
+    private IEnumerator SpeedBoostRoutine(float add, float dur)
+    {
+        float original = moveSpeed;
+        moveSpeed = original + add;
+        yield return new WaitForSeconds(dur);
+        moveSpeed = original;
+        speedBoostCor = null;
+    }
+    public void ApplyJumpBoost(float addAmount, float duration)
+    {
+        if (jumpBoostCor != null) StopCoroutine(jumpBoostCor);
+        jumpBoostCor = StartCoroutine(JumpBoostRoutine(addAmount, duration));
+    }
+
+    private IEnumerator JumpBoostRoutine(float add, float dur)
+    {
+        float original = jumpPower;
+        jumpPower = original + add;
+        yield return new WaitForSeconds(dur);
+        jumpPower = original;
+        jumpBoostCor = null;
     }
 }
