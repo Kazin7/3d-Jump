@@ -1,0 +1,34 @@
+using UnityEngine;
+
+public interface IInteractable
+{
+    public string GetInteractPrompt();
+    public void OnInteract();
+}
+
+public class ItemObject : MonoBehaviour, IInteractable
+{
+    public ItemData data;
+    public string GetInteractPrompt()
+    {
+        string str = $"{data.displayName}\n{data.description}";
+        return str;
+    }
+
+    public void OnInteract()
+    {
+        CharacterManager.Instance.Player.itemData = data;
+        UseItem();
+        Destroy(gameObject);
+    }
+    public void UseItem()
+    {
+        if (data.type == ItemType.Consumable)
+        {
+            if (data.consumable.type == ConsumableType.Health)
+            {
+                CharacterManager.Instance.Player.condition.Heal(data.consumable.value);
+            }
+        }
+    }
+}
