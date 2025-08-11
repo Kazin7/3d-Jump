@@ -5,23 +5,22 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
-    public float moveSpeed;
+    public float moveSpeed = 5f;
     private Vector2 curMovementInput;
-    public float jumpPower;
+    public float jumpPower = 80f;
     public LayerMask groundLayerMask;
 
     [Header("Look")]
     public Transform cameraContainer;
-    public float minXLook;
-    public float maxXLook;
+    public float minXLook = -85f;
+    public float maxXLook = 85f;
     private float camCurXRot;
-    public float lookSensitivity;
+    public float lookSensitivity = 0.2f;
 
     private Vector2 mouseDelta;
 
     [HideInInspector]
     public bool canLook = true;
-    public Action inventory;
     private Rigidbody rb;
 
     private void Awake()
@@ -108,14 +107,6 @@ public class PlayerController : MonoBehaviour
             }
         }
         return false;
-    }
-    public void OnInventoryButton(InputAction.CallbackContext callbackContext)
-    {
-        if (callbackContext.phase == InputActionPhase.Started)
-        {
-            inventory?.Invoke();
-	          ToggleCursor();
-        }
     }
     
     void ToggleCursor()
