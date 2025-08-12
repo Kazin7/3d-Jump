@@ -26,6 +26,12 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 mouseDelta;
 
+    [Header("Animation")]
+    public Animator animator;                                   
+    private static readonly int MoveSpeedHash = Animator.StringToHash("MoveSpeed"); 
+    private static readonly int GroundedHash = Animator.StringToHash("Grounded");  
+    private const float WalkScale = 0.33f;
+
     [HideInInspector] public bool canLook = true;
     private Rigidbody rb;
     private PlayerCondition condition;
@@ -34,6 +40,11 @@ public class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         condition = GetComponent<PlayerCondition>();
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null) animator = GetComponentInChildren<Animator>();
+        }
     }
 
     void Start()
@@ -44,6 +55,7 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         Move();
+        UpdateAnimator();
     }
 
     private void LateUpdate()
@@ -80,8 +92,8 @@ public class PlayerController : MonoBehaviour
     }
     public void OnRunInput(InputAction.CallbackContext context)
     {
-        if (context.phase == InputActionPhase.Started)   isRunning = true;
-        if (context.phase == InputActionPhase.Canceled)  isRunning = false;
+        if (context.phase == InputActionPhase.Started) isRunning = true;
+        if (context.phase == InputActionPhase.Canceled) isRunning = false;
     }
     // Move() 변경
     private void Move()
@@ -160,5 +172,16 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(dur);
         jumpPower = original;
         jumpBoostCor = null;
+    }
+    private void UpdateAnimator()
+    {
+        if (animator == null) return;
+
+        bool grounded = IsGrounded();
+        animator.SetBool(GroundedHash, grounded);
+
+        float inputMag = Mathf.Clamp01(new Vector2(curMovementInput.x, curMovementInput.y).magnitude);
+        float animSpeed = isRunning ? inputMag : inputMag * WalkScale;
+        animator.SetFloat(MoveSpeedHash, animSpeed, 0.1f, Time.deltaTime);
     }
 }
