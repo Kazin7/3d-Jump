@@ -6,8 +6,8 @@ public class Interaction : MonoBehaviour
 {
     public float checkRate = 0.05f;
     private float lastCheckTime;
-    public float maxCheckDistance;
-    public LayerMask layerMask;
+    public float checkRadius = 2f;        // OverlapSphere 반경
+    public LayerMask layerMask;           // 감지할 레이어
 
     public GameObject curInteractGameObject;
     private IInteractable curInteractable;
@@ -22,19 +22,36 @@ public class Interaction : MonoBehaviour
 
     void Update()
     {
-        if(Time.time - lastCheckTime > checkRate)
+        if (Time.time - lastCheckTime > checkRate)
         {
             lastCheckTime = Time.time;
 
-            Ray ray = cam.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
-            RaycastHit hit;
+            // 플레이어 주변에서 구 형태로 감지
+            Collider[] hits = Physics.OverlapSphere(transform.position, checkRadius, layerMask);
 
-            if(Physics.Raycast(ray, out hit, maxCheckDistance, layerMask))
+            if (hits.Length > 0)
             {
-                if(hit.collider.gameObject != curInteractGameObject)
+                // 화면 중앙에 가까운 오브젝트 선택 (또는 가장 가까운 오브젝트)
+                Transform closest = null;
+                float minAngle = float.MaxValue;
+
+                foreach (Collider col in hits)
                 {
-                    curInteractGameObject = hit.collider.gameObject;
-                    curInteractable = hit.collider.GetComponent<IInteractable>();
+                    Vector3 dirToTarget = (col.transform.position - cam.transform.position).normalized;
+                    float angle = Vector3.Angle(cam.transform.forward, dirToTarget);
+
+                    // 시야 중심에 가장 가까운 대상 선택
+                    if (angle < minAngle)
+                    {
+                        minAngle = angle;
+                        closest = col.transform;
+                    }
+                }
+
+                if (closest != null && closest.gameObject != curInteractGameObject)
+                {
+                    curInteractGameObject = closest.gameObject;
+                    curInteractable = closest.GetComponent<IInteractable>();
                     SetPromptText();
                 }
             }
@@ -49,13 +66,14 @@ public class Interaction : MonoBehaviour
 
     private void SetPromptText()
     {
+        if (curInteractable == null) return;
         promptText.gameObject.SetActive(true);
         promptText.text = curInteractable.GetInteractPrompt();
     }
 
     public void OnInteractInput(InputAction.CallbackContext context)
     {
-        if(context.phase == InputActionPhase.Started && curInteractable != null)
+        if (context.phase == InputActionPhase.Started && curInteractable != null)
         {
             curInteractable.OnInteract();
             curInteractGameObject = null;

@@ -23,6 +23,8 @@ public class MovingBlock : MonoBehaviour
             carrierRoot = transform.parent != null ? transform.parent : transform;
 
         blockRb = carrierRoot.GetComponent<Rigidbody>();
+
+        //방어코드
         if (blockRb == null)
             blockRb = carrierRoot.gameObject.AddComponent<Rigidbody>();
 
@@ -59,13 +61,13 @@ public class MovingBlock : MonoBehaviour
     }
 
 
-    private void OnCollisionEnter(Collision collision)
-    {
-        riders.Add(collision.transform);
-    }
+    // private void OnCollisionEnter(Collision collision)
+    // {
+    //     riders.Add(collision.transform);
+    // }
 
-    private void OnCollisionExit(Collision collision)
-    {
-        riders.Remove(collision.transform);
-    }
+    // private void OnCollisionExit(Collision collision)
+    // {
+    //     riders.Remove(collision.transform);
+    // }
 }
