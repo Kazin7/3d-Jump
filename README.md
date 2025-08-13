@@ -37,28 +37,26 @@
 | 점프 | Space |
 | 시점 회전 | 마우스 이동 |
 
-## 🏗️ 프로젝트 구조(예시)
+## 📁 프로젝트 구조
 
-Assets/
-Scripts/
-Player/
-PlayerController.cs // 이동/점프/달리기, 카메라 룩, 애니메이션 연동
-PlayerCondition.cs // 체력/스태미너 로직
-Environment/
-MovingBlock.cs // 무빙 플랫폼(캐리어 기반, 속도 공개)
-JumpPad.cs // 점프대(Impulse)
-Items/
-ItemData.cs // ScriptableObject: 아이템 정의
-ItemUseExample.cs // 코루틴 기반 버프 예시
-UI/
-UICondition.cs // 체력/스태미너 바 반영
-InspectUI.cs // 조사 UI 표시
-ScriptableObjects/
-Items/ // 아이템 데이터 에셋들
-Prefabs/
-Player.prefab
-MovingPlatform.prefab
-JumpPad.prefab
+| 폴더/파일 경로 | 설명 |
+|---|---|
+| `Assets/Animations/` | 캐릭터/환경 애니메이션 클립, 애니메이터 컨트롤러 |
+| `Assets/Externals/` | 외부 에셋(사운드, 머티리얼 등 서드파티 리소스) |
+| `Assets/Image/` | UI 스프라이트, 아이콘 등 이미지 리소스 |
+| `Assets/InputActions/` | Input System 액션 맵(`*.inputactions`) |
+| `Assets/Prefabs/` | 재사용 프리팹(예: `Player`, `MovingPlatform`, `JumpPad`) |
+| `Assets/Scenes/` | 씬 파일(예: `MainScene.unity`) |
+| `Assets/ScriptableObject/` | 아이템/설정 데이터 `ScriptableObject` 에셋 |
+| `Assets/Scripts/` | C# 스크립트 루트 |
+| ├─ `Player/` | `PlayerController.cs`, `PlayerCondition.cs` 등 플레이어 로직 |
+| ├─ `Environment/` | `MovingBlock.cs`, `JumpPad.cs` 등 환경/기믹 |
+| ├─ `UI/` | `UICondition.cs`, 조사 HUD 등 UI 스크립트 |
+| └─ `Items/` | `ItemData.cs`, 버프/아이템 사용 로직 |
+| `Assets/Supercyan Character Pack Free Sample/` | 샘플 캐릭터 리소스(모델/애니메이션) |
+| `Assets/TextMesh Pro/` | TMP 리소스, 폰트 에셋 |
+| `Packages/` | 패키지 매니페스트/캐시(자동 생성/관리) |
+
 
 
 ## ⚙️ 셋업 가이드
