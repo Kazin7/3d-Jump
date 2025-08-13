@@ -27,15 +27,16 @@ public class PlayerController : MonoBehaviour
     private Vector2 mouseDelta;
 
     [Header("Animation")]
-    public Animator animator;                                   
-    private static readonly int MoveSpeedHash = Animator.StringToHash("MoveSpeed"); 
-    private static readonly int GroundedHash = Animator.StringToHash("Grounded");  
+    public Animator animator;
+    private static readonly int MoveSpeedHash = Animator.StringToHash("MoveSpeed");
+    private static readonly int GroundedHash = Animator.StringToHash("Grounded");
     private const float WalkScale = 0.33f;
 
     [HideInInspector] public bool canLook = true;
     private Rigidbody rb;
     private PlayerCondition condition;
-
+    private MovingBlock currentPlatform;
+    //초기화
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -65,7 +66,7 @@ public class PlayerController : MonoBehaviour
             CameraLook();
         }
     }
-
+    //각각 키입력에 따른 로직처리
     public void OnLookInput(InputAction.CallbackContext context)
     {
         mouseDelta = context.ReadValue<Vector2>();
@@ -95,7 +96,7 @@ public class PlayerController : MonoBehaviour
         if (context.phase == InputActionPhase.Started) isRunning = true;
         if (context.phase == InputActionPhase.Canceled) isRunning = false;
     }
-    // Move() 변경
+    //플레이어 이동 로직
     private void Move()
     {
         Vector3 dir = transform.forward * curMovementInput.y + transform.right * curMovementInput.x;
@@ -111,6 +112,11 @@ public class PlayerController : MonoBehaviour
         }
 
         dir *= targetSpeed;
+        if (currentPlatform != null && IsGrounded())
+        {
+            Vector3 pv = currentPlatform.PlatformVelocity; // 필요시 pv = new Vector3(0,0,pv.z);
+            dir += new Vector3(pv.x, 0f, pv.z);
+        }
         dir.y = rb.velocity.y;
         rb.velocity = dir;
     }
@@ -124,9 +130,9 @@ public class PlayerController : MonoBehaviour
 
         transform.eulerAngles += new Vector3(0, mouseDelta.x * lookSensitivity, 0);
     }
-
+    //점프를 위한 땅체크 로직
     bool IsGrounded()
-    {
+    {   //4방향을 레이캐스트로 체크
         Ray[] rays = new Ray[4]
         {
             new Ray(transform.position + (transform.forward * 0.2f) + (transform.up * 0.01f), Vector3.down),
@@ -144,7 +150,7 @@ public class PlayerController : MonoBehaviour
         }
         return false;
     }
-
+    //속도 증가 로직
     public void ApplySpeedBoost(float addAmount, float duration)
     {
         if (speedBoostCor != null) StopCoroutine(speedBoostCor);
@@ -159,6 +165,7 @@ public class PlayerController : MonoBehaviour
         moveSpeed = original;
         speedBoostCor = null;
     }
+    //점프 증가 로직
     public void ApplyJumpBoost(float addAmount, float duration)
     {
         if (jumpBoostCor != null) StopCoroutine(jumpBoostCor);
@@ -173,6 +180,7 @@ public class PlayerController : MonoBehaviour
         jumpPower = original;
         jumpBoostCor = null;
     }
+    //가져온 모델의 애니메이터 활용을 위한 애니메이터 설정
     private void UpdateAnimator()
     {
         if (animator == null) return;
@@ -184,4 +192,7 @@ public class PlayerController : MonoBehaviour
         float animSpeed = isRunning ? inputMag : inputMag * WalkScale;
         animator.SetFloat(MoveSpeedHash, animSpeed, 0.1f, Time.deltaTime);
     }
+    //MovingBlock에서 사용하기 위한 함수
+    public void SetPlatform(MovingBlock p) { currentPlatform = p; }
+    public void ClearPlatform(MovingBlock p){ if (currentPlatform == p) currentPlatform = null; }
 }

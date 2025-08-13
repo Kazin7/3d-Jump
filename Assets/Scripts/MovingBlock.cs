@@ -13,9 +13,10 @@ public class MovingBlock : MonoBehaviour
 
     Rigidbody blockRb;
     Vector3 startLocalPosOfBlock;
-    Vector3 lastPosition;
+    public Vector3 PlatformVelocity { get; private set; }
+    Vector3 lastWorldPos; 
 
-    private HashSet<Transform> riders = new HashSet<Transform>();
+    // private HashSet<Transform> riders = new HashSet<Transform>();
 
     void Awake()
     {
@@ -35,7 +36,7 @@ public class MovingBlock : MonoBehaviour
     void Start()
     {
         startLocalPosOfBlock = carrierRoot.localPosition;
-        lastPosition = carrierRoot.position;
+        lastWorldPos = carrierRoot.position;
     }
 
     void FixedUpdate()
@@ -48,26 +49,27 @@ public class MovingBlock : MonoBehaviour
 
         Vector3 worldPos = carrierRoot.parent ? carrierRoot.parent.TransformPoint(lp) : lp;
 
-        Vector3 deltaMove = worldPos - lastPosition;
+        Vector3 delta = worldPos - lastWorldPos;
+        PlatformVelocity = delta / Time.fixedDeltaTime;
 
         blockRb.MovePosition(worldPos);
+        lastWorldPos = worldPos;
 
-        foreach (var rider in riders)
-        {
-            rider.position += deltaMove;
-        }
 
-        lastPosition = worldPos;
     }
 
+    //충돌시 플레이어 자식으로 연결
+    // MovingBlock.cs
+    void OnCollisionEnter(Collision c)
+    {
+        var pc = c.transform.GetComponentInParent<PlayerController>();
+        if (pc != null) pc.SetPlatform(this);
+    }
 
-    // private void OnCollisionEnter(Collision collision)
-    // {
-    //     riders.Add(collision.transform);
-    // }
+    void OnCollisionExit(Collision c)
+    {
+        var pc = c.transform.GetComponentInParent<PlayerController>();
+        if (pc != null) pc.ClearPlatform(this);
+    }
 
-    // private void OnCollisionExit(Collision collision)
-    // {
-    //     riders.Remove(collision.transform);
-    // }
 }

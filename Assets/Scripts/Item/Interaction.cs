@@ -47,7 +47,7 @@ public class Interaction : MonoBehaviour
                         closest = col.transform;
                     }
                 }
-
+                // 상호작용 처리
                 if (closest != null && closest.gameObject != curInteractGameObject)
                 {
                     curInteractGameObject = closest.gameObject;
@@ -63,14 +63,14 @@ public class Interaction : MonoBehaviour
             }
         }
     }
-
+    //아이템 정보 띄우기
     private void SetPromptText()
     {
         if (curInteractable == null) return;
         promptText.gameObject.SetActive(true);
         promptText.text = curInteractable.GetInteractPrompt();
     }
-
+    //e키 눌러서 상호작용시
     public void OnInteractInput(InputAction.CallbackContext context)
     {
         if (context.phase == InputActionPhase.Started && curInteractable != null)
