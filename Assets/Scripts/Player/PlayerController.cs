@@ -25,6 +25,10 @@ public class PlayerController : MonoBehaviour
     public float lookSensitivity = 0.2f;
 
     private Vector2 mouseDelta;
+    [Header("Ladder")]
+    private bool isClimbing;
+    private float climbAxis;
+    [SerializeField] private float climbSpeed = 3f;
 
     [Header("Animation")]
     public Animator animator;
@@ -99,6 +103,11 @@ public class PlayerController : MonoBehaviour
     //플레이어 이동 로직
     private void Move()
     {
+        if (isClimbing)
+        {
+            rb.velocity = new Vector3(0f, climbAxis * climbSpeed, 0f);
+            return;
+        }
         Vector3 dir = transform.forward * curMovementInput.y + transform.right * curMovementInput.x;
 
         float targetSpeed = moveSpeed;
@@ -194,5 +203,19 @@ public class PlayerController : MonoBehaviour
     }
     //MovingBlock에서 사용하기 위한 함수
     public void SetPlatform(MovingBlock p) { currentPlatform = p; }
-    public void ClearPlatform(MovingBlock p){ if (currentPlatform == p) currentPlatform = null; }
+    public void ClearPlatform(MovingBlock p) { if (currentPlatform == p) currentPlatform = null; }
+    
+    //사다리 올라갈때 사용할 함수
+    public void SetClimbState(bool active, float newSpeed = -1f)
+    {
+        isClimbing = active;
+        if (newSpeed > 0f) climbSpeed = newSpeed;
+        rb.useGravity = !active;
+        rb.velocity = Vector3.zero;
+    }
+
+    public void SetClimbAxis(float axis)
+    {
+        climbAxis = Mathf.Clamp(axis, -1f, 1f);
+}
 }
